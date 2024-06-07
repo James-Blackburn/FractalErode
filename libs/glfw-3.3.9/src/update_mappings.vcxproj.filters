@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\james\Documents\uni\dissertation\final-year-project-James-Blackburn\CMakeFiles\f47a0953f3d6f8dfdbbde32f2376f51d\update_mappings.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\james\Documents\uni\dissertation\final-year-project-James-Blackburn\libs\glfw-3.3.9\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\james\Documents\uni\dissertation\final-year-project-James-Blackburn\libs\glfw-3.3.9\src\mappings.h.in">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="C:\Users\james\Documents\uni\dissertation\final-year-project-James-Blackburn\libs\glfw-3.3.9\CMake\GenerateMappings.cmake" />
+    <None Include="C:\Users\james\Documents\uni\dissertation\final-year-project-James-Blackburn\libs\glfw-3.3.9\src\CMakeFiles\update_mappings" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{6172530C-C672-34E0-8EEA-DBE968979AA1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{932EC4A1-FF23-3C3A-83CA-01ECEF8A83ED}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
