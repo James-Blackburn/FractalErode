@@ -19,7 +19,6 @@ layout(location=2) uniform float kC;
 layout(location=3) uniform float kD;
 layout(location=4) uniform float kS;
 layout(location=5) uniform float kE;
-
 // thermal erosion uniforms
 layout(location=6) uniform bool thermalEnabled;
 layout(location=7) uniform float kT;
@@ -28,55 +27,48 @@ layout(location=8) uniform float cT;
 const int dX[8] = { -1, +0, +1, -1, +1, -1, +0, +1 };
 const int dZ[8] = { -1, -1, -1, +0, +0, +1, +1, +1 };
 
-void moveWaterIn(){
-    const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
+float cellHeightOut = 0.0;
+float cellWaterOut = 0.0;
+float cellSedimentOut = 0.0;
 
+void moveWaterIn(uint cellIndex) {
     // for each neighbour calculate flow of water and sediment to current cell
     for (int i = 0; i < 8; i++) {
         const uint nCellIndex = (gl_GlobalInvocationID.y + dZ[i]) * size + gl_GlobalInvocationID.x + dX[i];
-        float deltaH = (heightmap[nCellIndex] + waterIn[nCellIndex]) - (heightmap[cellIndex] + waterIn[cellIndex]);
-
         // stop execution if no water present in neighbouring cell
-        if (waterIn[nCellIndex] == 0.0){
+        if (waterIn[nCellIndex] == 0.0)
             continue;
-        }
-        
+
         // try to move all the water out of the neighbouring cell
+        float deltaH = (heightmap[nCellIndex] + waterIn[nCellIndex]) - (heightmap[cellIndex] + waterIn[cellIndex]);
         float deltaW = min(waterIn[nCellIndex], deltaH);
 
         // neighbour total height (inc. water) is higher than current cell
         if (deltaW > 0.0) {
             // calculate movement of water from neighbour to current cell
             // scale water to move by difference in heights
-            deltaW = deltaW * (deltaH / totalDeltaHW[nCellIndex]);
-            waterOut[cellIndex] += deltaW;
+            deltaW *= deltaH / totalDeltaHW[nCellIndex];
+            cellWaterOut += deltaW;
 
             // sediment trying to move from cell to neighbour
             const float deltaS = sedimentIn[nCellIndex] * (deltaH / totalDeltaHW[nCellIndex]);
             // calculate max amount of sediment able to be carried in water at current cell
             const float sCap = deltaW * kC;
-            if (deltaS >= sCap) { // deposition
-                sedimentOut[cellIndex] += sCap;
-            }
+            if (deltaS >= sCap) // deposition
+                cellSedimentOut += sCap;
             else { // erosion
                 const float erosionAmount = kS * (sCap - deltaS);
-                sedimentOut[cellIndex] += deltaS + erosionAmount;
+                cellSedimentOut += deltaS + erosionAmount;
             }
         }
     }
 }
 
-void moveWaterOut(){
-    const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
-
-    if (waterIn[cellIndex] == 0.0){
-        return;
-    }
-
+void moveWaterOut(uint cellIndex){
     // for cell calculate flow of water and sediment to each neighbour
     for (int i = 0; i < 8; i++) {
         const uint nCellIndex = (gl_GlobalInvocationID.y + dZ[i]) * size + gl_GlobalInvocationID.x + dX[i];
-        float deltaH = (heightmap[cellIndex] + waterIn[cellIndex]) - (heightmap[nCellIndex] + waterIn[nCellIndex]);
+        const float deltaH = (heightmap[cellIndex] + waterIn[cellIndex]) - (heightmap[nCellIndex] + waterIn[nCellIndex]);
         
         // try to move all the water out of the cell
         float deltaW = min(waterIn[cellIndex], deltaH);
@@ -85,9 +77,9 @@ void moveWaterOut(){
         if (deltaW <= 0.0) {
             // deposit some sediment at current cell if altitude is lower
             if (heightmap[cellIndex] <= heightmap[nCellIndex]) {
-                float sedDeposit = kD * sedimentIn[cellIndex];
-                heightOut[cellIndex] += sedDeposit;
-                sedimentOut[cellIndex] -= sedDeposit;
+                const float sedDeposit = kD * sedimentIn[cellIndex];
+                cellHeightOut += sedDeposit;
+                cellSedimentOut -= sedDeposit;
             }
         }
 
@@ -96,7 +88,7 @@ void moveWaterOut(){
             // calculate movement of water from current cell to neighbour
             // scale water to move by difference in heights
             deltaW = deltaW * (deltaH / totalDeltaHW[cellIndex]);
-            waterOut[cellIndex] -= deltaW;
+            cellWaterOut -= deltaW;
 
             // sediment trying to move from cell to neighbour
             const float deltaS = sedimentIn[cellIndex] * (deltaH / totalDeltaHW[cellIndex]);
@@ -105,61 +97,56 @@ void moveWaterOut(){
             if (deltaS >= sCap) { // deposition 
                 // deposit left over sediment in current cell
                 const float sedDeposit = kD * (deltaS - sCap);
-                sedimentOut[cellIndex] -= sCap + sedDeposit;
-                heightOut[cellIndex] += sedDeposit;
+                cellSedimentOut -= sCap + sedDeposit;
+                cellHeightOut += sedDeposit;
             }
             else { // erosion
                 // erode some soil according to the softness, constituting erosion
                 const float erosionAmount = kS * (sCap - deltaS);
-                heightOut[cellIndex] -= erosionAmount;
-                sedimentOut[cellIndex] -= deltaS;
+                cellHeightOut -= erosionAmount;
+                cellSedimentOut -= deltaS;
             }
         }
     }
 }
 
-void hydraulicErosion(){
-    // we can only chance the current thread's cell
-
-    // this step changes the adds water and sediment to the cell based on the
-    // amount of calculated incoming water
-    moveWaterIn();
-    
-    // this step removes sediment and changes the height of the 
-    // cell based on the amount of calculated outgoing water
-    moveWaterOut();
-}
-
-
-void thermalErosion(){
-    const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
-    for (int i=0; i<8; i++){
-        if (gl_GlobalInvocationID.y + dZ[i] != 0 && gl_GlobalInvocationID.y + dZ[i] != size - 1 &&
-            gl_GlobalInvocationID.x + dX[i] != 0 && gl_GlobalInvocationID.x + dX[i] != size - 1){
-                const uint nCellIndex = (gl_GlobalInvocationID.y + dZ[i]) * size + gl_GlobalInvocationID.x + dX[i];
-                float deltaH = (heightmap[nCellIndex] - heightmap[cellIndex]);
-                if (deltaH > kT){
-                    heightOut[cellIndex] += cT * (deltaH - kT) * (deltaH / totalDeltaH[nCellIndex]);
-                }
-                else{
-                    deltaH = (heightmap[cellIndex] - heightmap[nCellIndex]);
-                    if (deltaH > kT) {
-                        heightOut[cellIndex] -= cT * (deltaH - kT) * (deltaH / totalDeltaH[cellIndex]);
-                    }
-                }
-            }
+void thermalErosion(uint cellIndex){
+    for (int i = 0; i < 8; i++){
+        if (gl_GlobalInvocationID.y + dZ[i] == 0 || gl_GlobalInvocationID.y + dZ[i] == size - 1 ||
+            gl_GlobalInvocationID.x + dX[i] == 0 || gl_GlobalInvocationID.x + dX[i] == size - 1)
+            continue;
+        
+        const uint nCellIndex = (gl_GlobalInvocationID.y + dZ[i]) * size + gl_GlobalInvocationID.x + dX[i];
+        float deltaH = (heightmap[nCellIndex] - heightmap[cellIndex]);
+        
+        if (deltaH > kT)
+            cellHeightOut += cT * (deltaH - kT) * (deltaH / totalDeltaH[nCellIndex]);
+        else {
+            deltaH = (heightmap[cellIndex] - heightmap[nCellIndex]);
+            if (deltaH > kT)
+                cellHeightOut -= cT * (deltaH - kT) * (deltaH / totalDeltaH[cellIndex]);
+        }
     }
 }
 
 void main(){
-    if (gl_GlobalInvocationID.y > 0 && gl_GlobalInvocationID.y < size - 1 &&
-        gl_GlobalInvocationID.x > 0 && gl_GlobalInvocationID.x < size - 1){
-            
-            if (hydraulicEnabled){
-                hydraulicErosion();
-            }
-            if (thermalEnabled){
-                thermalErosion();
-            }
+    if (gl_GlobalInvocationID.y == 0 || gl_GlobalInvocationID.y == size - 1 ||
+        gl_GlobalInvocationID.x == 0 || gl_GlobalInvocationID.x == size - 1)
+        return;
+
+    const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
+
+    if (hydraulicEnabled) {
+        // this step changes the adds water and sediment to the cell based on the amount of calculated incoming water
+        moveWaterIn(cellIndex);
+        // this step removes sediment and changes the height of the cell based on the amount of calculated outgoing water
+        if (waterIn[cellIndex] > 0.0)
+            moveWaterOut(cellIndex);
     }
+    if (thermalEnabled)
+        thermalErosion(cellIndex);
+
+    heightOut[cellIndex] += cellHeightOut;
+    waterOut[cellIndex] += cellWaterOut;
+    sedimentOut[cellIndex] += cellSedimentOut;
 }

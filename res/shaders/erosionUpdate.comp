@@ -18,9 +18,8 @@ layout(location=5) uniform float kE;
 
 void main(){
     if (gl_GlobalInvocationID.y == 0 || gl_GlobalInvocationID.y == size - 1 ||
-        gl_GlobalInvocationID.x == 0 || gl_GlobalInvocationID.x == size - 1){
-            return;
-    }
+        gl_GlobalInvocationID.x == 0 || gl_GlobalInvocationID.x == size - 1)
+        return;
 
     const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
 
@@ -33,8 +32,8 @@ void main(){
         sedimentOut[cellIndex] = 0.0;
     }
 
-    // update buffers
-    if (currentStep != 0){
+    // else update buffers
+    else {
         // apply evaporation if any
         waterOut[cellIndex] *= kE;
         if (waterOut[cellIndex] < 0.000001){

@@ -14,7 +14,12 @@ const int dX[8] = { -1, +0, +1, -1, +1, -1, +0, +1 };
 const int dZ[8] = { -1, -1, -1, +0, +0, +1, +1, +1 };
 
 void main(){
+    if (gl_GlobalInvocationID.y == 0 || gl_GlobalInvocationID.y == size - 1 ||
+        gl_GlobalInvocationID.x == 0 || gl_GlobalInvocationID.x == size - 1)
+        return;
+
     const uint cellIndex = gl_GlobalInvocationID.y * size + gl_GlobalInvocationID.x;
+    
     // calculate and fill delta H buffer
     float tdh = 0.0;
     float tdhw = 0.0;
@@ -23,12 +28,10 @@ void main(){
         const float deltaH = heightmap[cellIndex] - heightmap[nCellIndex];
         const float deltaHW = (heightmap[cellIndex] + waterIn[cellIndex]) - (heightmap[nCellIndex] + waterIn[nCellIndex]);
 
-        if (deltaH > kT) {
+        if (deltaH > kT)
             tdh += deltaH;
-        }
-        if (deltaHW > 0.0) {
+        if (deltaHW > 0.0)
             tdhw += deltaHW;
-        }
     }
     totalDeltaH[cellIndex] = tdh;
     totalDeltaHW[cellIndex] = tdhw;
