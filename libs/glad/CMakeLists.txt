@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.28.1)
 project(glad)
 
 add_library(glad include/glad/glad.h src/glad.c)
