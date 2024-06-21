@@ -39,21 +39,21 @@ namespace {
     Mat4 projection;
 
     // shaders
-    std::unique_ptr<ShaderProgram> terrainShader;
-    std::unique_ptr<ShaderProgram> waterShader;
-    std::unique_ptr<ShaderProgram> cubemapShader;
-    std::unique_ptr<ShaderProgram> treeShader;
+    ShaderProgram* terrainShader;
+    ShaderProgram* waterShader;
+    ShaderProgram* cubemapShader;
+    ShaderProgram* treeShader;
 
     // textures
-    std::unique_ptr<Texture> treeTexture;
-    std::unique_ptr<Texture> grassTexture;
-    std::unique_ptr<Texture> grassTextureNormal;
-    std::unique_ptr<Texture> stoneTexture;
-    std::unique_ptr<Texture> stoneTextureNormal;
-    std::unique_ptr<Texture> snowTexture;
-    std::unique_ptr<Texture> snowTextureNormal;
-    std::unique_ptr<Texture> mudTextureNormal;
-    std::unique_ptr<Texture> mudTexture;
+    Texture* treeTexture;
+    Texture* grassTexture;
+    Texture* grassTextureNormal;
+    Texture* stoneTexture;
+    Texture* stoneTextureNormal;
+    Texture* snowTexture;
+    Texture* snowTextureNormal;
+    Texture* mudTextureNormal;
+    Texture* mudTexture;
     
     // lighting
     Vec3 lightDirection{ -1.0f, 1.0f, 1.0f };
@@ -156,8 +156,23 @@ int main()
         terrainPatch.erosionManager.stopErosion();
 
     // clean resources
-    window->clean();
+    terrainShader->clean();
+    waterShader->clean();
+    cubemapShader->clean();
+    treeShader->clean();
+
+    treeTexture->clean();
+    grassTexture->clean();
+    grassTextureNormal->clean();
+    stoneTexture->clean();
+    stoneTextureNormal->clean();
+    snowTexture->clean();
+    snowTextureNormal->clean();
+    mudTextureNormal->clean();
+    mudTexture->clean();
+
     terrainPatch.clean();
+    window->clean();
 
     return 0;
 }
@@ -167,16 +182,16 @@ namespace {
     void loadShaders() {
         std::cout << "Loading and compiling shaders..." << std::endl;
         // compile shaders
-        terrainShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+        terrainShader = new ShaderProgram(std::vector<Shader>{
             {"res/shaders/terrain.vert", GL_VERTEX_SHADER},
             {"res/shaders/terrain.frag", GL_FRAGMENT_SHADER}});
-        waterShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+        waterShader = new ShaderProgram(std::vector<Shader>{
             {"res/shaders/water.vert", GL_VERTEX_SHADER},
             {"res/shaders/water.frag", GL_FRAGMENT_SHADER}});
-        cubemapShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+        cubemapShader = new ShaderProgram(std::vector<Shader>{
             {"res/shaders/cubemap.vert", GL_VERTEX_SHADER},
             {"res/shaders/cubemap.frag", GL_FRAGMENT_SHADER}});
-        treeShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+        treeShader = new ShaderProgram(std::vector<Shader>{
             {"res/shaders/billboard.vert", GL_VERTEX_SHADER},
             {"res/shaders/billboard.frag", GL_FRAGMENT_SHADER}});
 
@@ -216,15 +231,15 @@ namespace {
     void loadTextures() {
         std::cout << "Loading textures..." << std::endl;
         // load textures
-        treeTexture = std::make_unique<Texture>("res/textures/tree1.png");
-        grassTexture = std::make_unique<Texture>("res/textures/forrest_ground_01_2k.gltf/textures/forrest_ground_01_diff_2k.jpg");
-        stoneTexture = std::make_unique<Texture>("res/textures/rock_08_2k.gltf/textures/rock_08_diff_2k.jpg");
-        snowTexture = std::make_unique<Texture>("res/textures/macro_flour_2k.gltf/textures/macro_flour_diff_2k.jpg");
-        mudTexture = std::make_unique<Texture>("res/textures/brown_mud_2k.gltf/textures/brown_mud_diff_2k.jpg");
-        grassTextureNormal = std::make_unique<Texture>("res/textures/forrest_ground_01_2k.gltf/textures/forrest_ground_01_nor_gl_2k.jpg");
-        stoneTextureNormal = std::make_unique<Texture>("res/textures/rock_08_2k.gltf/textures/rock_08_nor_gl_2k.jpg");
-        snowTextureNormal = std::make_unique<Texture>("res/textures/macro_flour_2k.gltf/textures/macro_flour_nor_gl_2k.jpg");
-        mudTextureNormal = std::make_unique<Texture>("res/textures/brown_mud_2k.gltf/textures/brown_mud_nor_gl_2k.jpg");
+        treeTexture = new Texture("res/textures/tree1.png");
+        grassTexture = new Texture("res/textures/forrest_ground_01_2k.gltf/textures/forrest_ground_01_diff_2k.jpg");
+        stoneTexture = new Texture("res/textures/rock_08_2k.gltf/textures/rock_08_diff_2k.jpg");
+        snowTexture = new Texture("res/textures/macro_flour_2k.gltf/textures/macro_flour_diff_2k.jpg");
+        mudTexture = new Texture("res/textures/brown_mud_2k.gltf/textures/brown_mud_diff_2k.jpg");
+        grassTextureNormal = new Texture("res/textures/forrest_ground_01_2k.gltf/textures/forrest_ground_01_nor_gl_2k.jpg");
+        stoneTextureNormal = new Texture("res/textures/rock_08_2k.gltf/textures/rock_08_nor_gl_2k.jpg");
+        snowTextureNormal = new Texture("res/textures/macro_flour_2k.gltf/textures/macro_flour_nor_gl_2k.jpg");
+        mudTextureNormal = new Texture("res/textures/brown_mud_2k.gltf/textures/brown_mud_nor_gl_2k.jpg");
 
         // skybox
         std::vector<const char*> skyboxFaces{

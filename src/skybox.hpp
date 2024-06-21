@@ -13,8 +13,6 @@ public:
 	void render();
 	void clean();
 	inline unsigned int getTexture() const { return textureID; }
-
-	~Skybox();
 };
 
 #endif

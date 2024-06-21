@@ -102,7 +102,3 @@ void Skybox::render() {
 void Skybox::clean() {
     glDeleteVertexArrays(1, &VAO);
 }
-
-Skybox::~Skybox() {
-    clean();
-}

@@ -21,9 +21,9 @@ private:
     std::future<void> erosionFutureCPU;
     Terrain* terrain = nullptr;
 
-    std::unique_ptr<ShaderProgram> bufferUpdateShader;
-    std::unique_ptr<ShaderProgram> updateDeltaHShader;
-    std::unique_ptr<ShaderProgram> erosionShader;
+    ShaderProgram* bufferUpdateShader;
+    ShaderProgram* updateDeltaHShader;
+    ShaderProgram* erosionShader;
 
     // CPU erosion buffers
     std::vector<float> heightOut;
@@ -72,7 +72,6 @@ public:
     unsigned int size = 0;
     
     ErosionManager() = default;
-    ~ErosionManager() { clean(); };
 
 	void init(Terrain* terrain_);
     void clean();

@@ -7,6 +7,7 @@ struct Texture{
 
     Texture(const char*);
     int loadTexture();
+    void clean();
 };
 
 #endif

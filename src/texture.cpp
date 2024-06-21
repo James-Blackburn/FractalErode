@@ -48,3 +48,7 @@ int Texture::loadTexture()
     
     return 0;
 }
+
+void Texture::clean(){
+    glDeleteTextures(1, &glID);
+}

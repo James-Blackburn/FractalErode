@@ -15,11 +15,11 @@ void ErosionManager::init(Terrain* terrain_) {
     size = width * width;
 
     // compile compute shaders
-    erosionShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+    erosionShader = new ShaderProgram(std::vector<Shader>{
         {"res/shaders/erosion.comp", GL_COMPUTE_SHADER}});
-    bufferUpdateShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+    bufferUpdateShader = new ShaderProgram(std::vector<Shader>{
         {"res/shaders/erosionUpdate.comp", GL_COMPUTE_SHADER}});
-    updateDeltaHShader = std::make_unique<ShaderProgram>(std::vector<Shader>{
+    updateDeltaHShader = new ShaderProgram(std::vector<Shader>{
         {"res/shaders/erosionDeltaH.comp", GL_COMPUTE_SHADER}});
 
     // create CPU erosion buffers
@@ -121,6 +121,10 @@ void ErosionManager::clean() {
     glDeleteBuffers(1, &sedimentOutSSBO);
     glDeleteBuffers(1, &totalDeltaHWSSBO);
     glDeleteBuffers(1, &totalDeltaHSSBO);
+
+    bufferUpdateShader->clean();
+    updateDeltaHShader->clean();
+    bufferUpdateShader->clean();
 }
 
 // CPU EROSION --------------------------------------------------------------------

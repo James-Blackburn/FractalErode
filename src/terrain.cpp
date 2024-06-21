@@ -170,4 +170,5 @@ void Terrain::clean(){
 
     treeIndexes.clear();
     treePositions.clear();
+    erosionManager.clean();
 }
