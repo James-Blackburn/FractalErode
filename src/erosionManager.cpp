@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <omp.h>
 #include <future>
+#include <algorithm>
 
 #define heightIn terrain->heightmap
 #define waterIn terrain->water
